@@ -1,0 +1,21 @@
+import { integer, jsonb, pgTable, text, uuid, varchar } from "drizzle-orm/pg-core";
+import { createdAt, dbId, updatedAt } from "../../database/shared-drizzle";
+import { savedContentTable } from "../content/content.table";
+
+const recipeTable = pgTable("recipes", {
+  id: dbId,
+  savedContentId: uuid("saved_content_id").references(
+    () => savedContentTable.id
+  ),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description").notNull(),
+  ingredients: jsonb("ingredients").notNull(),
+  instructions: text("instructions").notNull(),
+  servings: integer("servings"),
+  prepTimeMinutes: integer("prep_time_minutes"),
+  cookTimeMinutes: integer("cook_time_minutes"),
+  createdAt,
+  updatedAt,
+});
+
+export { recipeTable };

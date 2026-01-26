@@ -63,8 +63,8 @@ class DefaultFirebaseOptions {
     messagingSenderId: '889706711750',
     projectId: 'rechef-7ee76',
     storageBucket: 'rechef-7ee76.firebasestorage.app',
-    iosClientId: '889706711750-4s97id07edh5e9is8o90lqtiip7h2j7u.apps.googleusercontent.com',
+    iosClientId:
+        '889706711750-4s97id07edh5e9is8o90lqtiip7h2j7u.apps.googleusercontent.com',
     iosBundleId: 'com.rechef.app',
   );
-
 }
