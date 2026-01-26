@@ -1,0 +1,12 @@
+{
+  "folders": [
+    {
+      "path": "./api",
+      "name": "api",
+    },
+    {
+      "path": "./mobile",
+      "name": "mobile",
+    },
+  ],
+}
