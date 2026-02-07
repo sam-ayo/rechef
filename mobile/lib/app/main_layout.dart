@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../app/pantry/presentation/add_item_sheet.dart';
 import '../core/routing/app_router.dart';
 import '../core/widgets/custom_bottom_nav_bar.dart';
 
@@ -56,6 +57,13 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
     router.go('/camera');
   }
 
+  void _onPantryAddTap(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (context) => const AddItemSheet(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final currentIndex = _getCurrentIndex(widget.location);
@@ -79,6 +87,9 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
         onTap: _onTabTapped,
         onSocialMediaTap: _onSocialMediaTap,
         onCameraTap: _onCameraTap,
+        onPlusPrimaryAction: widget.location.startsWith('/pantry')
+            ? () => _onPantryAddTap(context)
+            : null,
         accentColor: _accentColor,
         onMenuStateChanged: (isExpanded) {
           setState(() {

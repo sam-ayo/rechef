@@ -9,6 +9,8 @@ class CustomBottomNavBar extends StatefulWidget {
   final Function(int) onTap;
   final VoidCallback? onSocialMediaTap;
   final VoidCallback? onCameraTap;
+  /// When set, tapping the plus button runs this instead of expanding the menu.
+  final VoidCallback? onPlusPrimaryAction;
   final Color accentColor;
   final ValueChanged<bool>? onMenuStateChanged;
 
@@ -18,6 +20,7 @@ class CustomBottomNavBar extends StatefulWidget {
     required this.onTap,
     this.onSocialMediaTap,
     this.onCameraTap,
+    this.onPlusPrimaryAction,
     this.accentColor = const Color(0xFFFF4F63),
     this.onMenuStateChanged,
   });
@@ -188,7 +191,13 @@ class CustomBottomNavBarState extends State<CustomBottomNavBar>
                   return Padding(
                     padding: EdgeInsets.only(bottom: bottomPadding),
                     child: GestureDetector(
-                      onTap: _toggleExpanded,
+                      onTap: () {
+                        if (widget.onPlusPrimaryAction != null) {
+                          widget.onPlusPrimaryAction!();
+                        } else {
+                          _toggleExpanded();
+                        }
+                      },
                       behavior: HitTestBehavior.opaque,
                       child: Container(
                         width: width,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
 
@@ -199,56 +200,53 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen>
                   ),
                 ),
                 SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          recipe.name,
-                          style: Theme.of(context)
-                              .textTheme
-                              .headlineSmall
-                              ?.copyWith(
-                                fontWeight: FontWeight.w700,
-                                height: 1.2,
-                              ),
-                        ),
-                        if (recipe.description.isNotEmpty) ...[
-                          const SizedBox(height: 8),
-                          Text(
-                            recipe.description,
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyMedium
-                                ?.copyWith(
-                                  color: Colors.grey.shade600,
-                                  height: 1.4,
-                                ),
-                          ),
-                        ],
-                        const SizedBox(height: 16),
-                        Row(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Title → time/servings on cream background
+                      Container(
+                        width: double.infinity,
+                        color: const Color(0xFFFCF9F5),
+                        padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            if (recipe.totalMinutes > 0)
-                              _MetaInfo(
-                                icon: Icons.access_time_outlined,
-                                label: '${recipe.totalMinutes} min',
-                              ),
-                            if (recipe.totalMinutes > 0 &&
-                                recipe.servings != null)
-                              const SizedBox(width: 20),
-                            if (recipe.servings != null)
-                              _MetaInfo(
-                                icon: Icons.restaurant_outlined,
-                                label: '${recipe.servings} servings',
-                              ),
+                            Text(
+                              recipe.title,
+                              style: Theme.of(context).textTheme.headlineSmall
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                    height: 1.2,
+                                  ),
+                            ),
+                            const SizedBox(height: 16),
+                            if (recipe.author != null) ...[
+                              _AuthorRow(author: recipe.author!),
+                              const SizedBox(height: 16),
+                            ],
+                            Row(
+                              children: [
+                                _MetaInfo(
+                                  iconAsset: 'assets/icons/clock.svg',
+                                  label: '${recipe.minutes} min',
+                                ),
+                                const SizedBox(width: 20),
+                                _MetaInfo(
+                                  iconAsset: 'assets/icons/servings.svg',
+                                  label: '${recipe.servings} servings',
+                                ),
+                              ],
+                            ),
                           ],
                         ),
-                        const SizedBox(height: 24),
-                        _TabBarWidget(controller: _tabController),
-                      ],
-                    ),
+                      ),
+
+                      // Tab bar
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+                        child: _TabBarWidget(controller: _tabController),
+                      ),
+                    ],
                   ),
                 ),
                 SliverToBoxAdapter(
@@ -315,10 +313,7 @@ class _AppBarButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return FakeGlass(
       shape: LiquidRoundedSuperellipse(borderRadius: 999),
-      settings: LiquidGlassSettings(
-        blur: 10,
-        glassColor: glassColor,
-      ),
+      settings: LiquidGlassSettings(blur: 10, glassColor: glassColor),
       child: SizedBox(
         width: 40,
         height: 40,
@@ -332,26 +327,100 @@ class _AppBarButton extends StatelessWidget {
   }
 }
 
-class _MetaInfo extends StatelessWidget {
-  const _MetaInfo({required this.icon, required this.label});
+class _AuthorRow extends StatelessWidget {
+  const _AuthorRow({required this.author});
 
-  final IconData icon;
-  final String label;
+  final RecipeAuthor author;
 
   @override
   Widget build(BuildContext context) {
     return Row(
-      mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 18, color: Colors.grey.shade700),
-        const SizedBox(width: 6),
-        Text(
-          label,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.grey.shade700,
+        // Avatar
+        Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: Colors.grey.shade800,
+            shape: BoxShape.circle,
+          ),
+          alignment: Alignment.center,
+          child: Text(
+            author.name.isNotEmpty ? author.name[0].toUpperCase() : '?',
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+              fontSize: 16,
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        // Name and source
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                author.name,
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
               ),
+              if (author.sourceUrl != null)
+                Text(
+                  author.sourceUrl!,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+            ],
+          ),
         ),
       ],
+    );
+  }
+}
+
+class _MetaInfo extends StatelessWidget {
+  const _MetaInfo({required this.iconAsset, required this.label});
+
+  final String iconAsset;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Colors.grey.shade700;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: 18,
+            height: 18,
+            child: SvgPicture.asset(
+              iconAsset,
+              width: 18,
+              height: 18,
+              colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: color,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -361,43 +430,49 @@ class _TabBarWidget extends StatelessWidget {
 
   final TabController controller;
 
+  static const _cream = Color(0xFFFCF9F5);
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.grey.shade100,
-        borderRadius: BorderRadius.circular(25),
-      ),
-      padding: const EdgeInsets.all(4),
-      child: TabBar(
-        controller: controller,
-        indicator: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(22),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: IntrinsicWidth(
+        child: Container(
+          decoration: BoxDecoration(
+            color: _cream,
+            borderRadius: BorderRadius.circular(999),
+          ),
+          padding: const EdgeInsets.all(8),
+          child: TabBar(
+            controller: controller,
+            isScrollable: true,
+            tabAlignment: TabAlignment.start,
+            indicator: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(999),
             ),
-          ],
+            indicatorSize: TabBarIndicatorSize.tab,
+            dividerColor: Colors.transparent,
+            labelColor: Colors.black,
+            unselectedLabelColor: Colors.black87,
+            labelStyle: const TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 14,
+            ),
+            unselectedLabelStyle: const TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 14,
+            ),
+            labelPadding: const EdgeInsets.symmetric(
+              horizontal: 24,
+              vertical: 2,
+            ),
+            tabs: const [
+              Tab(text: 'Ingredients'),
+              Tab(text: 'Cooking'),
+            ],
+          ),
         ),
-        indicatorSize: TabBarIndicatorSize.tab,
-        dividerColor: Colors.transparent,
-        labelColor: Colors.black,
-        unselectedLabelColor: Colors.grey.shade600,
-        labelStyle: const TextStyle(
-          fontWeight: FontWeight.w600,
-          fontSize: 14,
-        ),
-        unselectedLabelStyle: const TextStyle(
-          fontWeight: FontWeight.w500,
-          fontSize: 14,
-        ),
-        tabs: const [
-          Tab(text: 'Ingredients'),
-          Tab(text: 'Cooking'),
-        ],
       ),
     );
   }
@@ -416,30 +491,20 @@ class _IngredientsTab extends StatelessWidget {
       children: [
         const SizedBox(height: 8),
         Text(
-          'Ingredients',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+          'Ingredients – (${recipe.ingredientsInPantry} in Pantry)',
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 16),
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            border: Border.all(color: dividerColor),
-            borderRadius: BorderRadius.circular(14),
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(14),
-            child: Column(
-              children: [
-                for (var i = 0; i < recipe.ingredients.length; i++) ...[
-                  _IngredientRow(ingredient: recipe.ingredients[i]),
-                  if (i != recipe.ingredients.length - 1)
-                    Divider(height: 1, thickness: 1, color: dividerColor),
-                ],
-              ],
-            ),
-          ),
+        Column(
+          children: [
+            for (var i = 0; i < recipe.ingredients.length; i++) ...[
+              _IngredientRow(ingredient: recipe.ingredients[i]),
+              if (i != recipe.ingredients.length - 1)
+                Divider(height: 1, thickness: 1, color: dividerColor),
+            ],
+          ],
         ),
       ],
     );
@@ -453,38 +518,69 @@ class _IngredientRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final checkedFill = const Color(0xFFF7B6C0);
+    final textColor =
+        Theme.of(context).textTheme.bodyMedium?.color ?? Colors.black;
+
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      child: Row(
-        children: [
-          Container(
-            width: 24,
-            height: 24,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.white,
-              border: Border.all(
-                color: Colors.grey.shade300,
-                width: 1.5,
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              ingredient.name,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w500,
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final quantityWidth = constraints.maxWidth * 0.35;
+          return Row(
+            children: [
+              // Checkbox
+              Container(
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: ingredient.inPantry ? checkedFill : Colors.white,
+                  border: Border.all(
+                    color: ingredient.inPantry
+                        ? Colors.transparent
+                        : Colors.grey.shade300,
+                    width: 1.5,
                   ),
-            ),
-          ),
-          Text(
-            ingredient.displayQuantity,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.grey.shade600,
                 ),
-          ),
-        ],
+                alignment: Alignment.center,
+                child: ingredient.inPantry
+                    ? SvgPicture.asset(
+                        'assets/icons/check-mark.svg',
+                        width: 14,
+                        height: 14,
+                        colorFilter: ColorFilter.mode(
+                          textColor,
+                          BlendMode.srcIn,
+                        ),
+                      )
+                    : null,
+              ),
+              const SizedBox(width: 12),
+              // Name
+              Expanded(
+                child: Text(
+                  ingredient.name,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+                ),
+              ),
+              // Quantity (capped at 27% of row width)
+              SizedBox(
+                width: quantityWidth,
+                child: Text(
+                  ingredient.quantity,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(color: Colors.grey.shade600),
+                  textAlign: TextAlign.end,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -503,17 +599,19 @@ class _CookingTab extends StatelessWidget {
         const SizedBox(height: 8),
         Text(
           'Cooking Instructions',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 20),
-        ...List.generate(
-          recipe.instructions.length,
-          (index) => _StepRow(
-            stepNumber: index + 1,
-            text: recipe.instructions[index],
-          ),
+        Column(
+          children: [
+            for (var i = 0; i < recipe.steps.length; i++) ...[
+              _StepRow(stepNumber: i + 1, text: recipe.steps[i]),
+              if (i != recipe.steps.length - 1)
+                Divider(height: 24, thickness: 1, color: Colors.grey.shade200),
+            ],
+          ],
         ),
       ],
     );
@@ -529,27 +627,34 @@ class _StepRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 24),
+      padding: const EdgeInsets.symmetric(vertical: 16),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            width: 28,
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.grey.shade300),
+              color: Colors.grey.shade50,
+            ),
+            alignment: Alignment.center,
             child: Text(
               stepNumber.toString().padLeft(2, '0'),
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: Colors.grey.shade400,
-                  ),
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: Colors.grey.shade700,
+              ),
             ),
           ),
           const SizedBox(width: 16),
           Expanded(
             child: Text(
               text,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    height: 1.5,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(height: 1.5),
             ),
           ),
         ],
@@ -567,41 +672,63 @@ class _BottomButton extends StatelessWidget {
   final bool isIngredientsTab;
   final VoidCallback onPressed;
 
+  static const _green = Color(0xFF2E7D32);
+
   @override
   Widget build(BuildContext context) {
+    final isGreen = isIngredientsTab;
+    final fillColor = isGreen ? _green : Colors.red.shade400;
+    const foregroundColor = Colors.white;
+
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
         child: SizedBox(
           width: double.infinity,
           height: 56,
-          child: OutlinedButton(
+          child: FilledButton(
             onPressed: onPressed,
-            style: OutlinedButton.styleFrom(
-              backgroundColor: Colors.white,
-              side: BorderSide(color: Colors.red.shade300, width: 1.5),
+            style: FilledButton.styleFrom(
+              backgroundColor: fillColor,
+              foregroundColor: foregroundColor,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(28),
               ),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
                   isIngredientsTab
                       ? 'Add missing items to Grocery list'
                       : 'Start cooking',
-                  style: TextStyle(
-                    color: Colors.red.shade400,
+                  style: const TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 16,
                   ),
                 ),
                 const SizedBox(width: 8),
-                Text(
-                  isIngredientsTab ? '🛒' : '🔥',
-                  style: const TextStyle(fontSize: 18),
-                ),
+                if (isIngredientsTab)
+                  SvgPicture.asset(
+                    'assets/icons/cart.svg',
+                    width: 20,
+                    height: 20,
+                    colorFilter: const ColorFilter.mode(
+                      foregroundColor,
+                      BlendMode.srcIn,
+                    ),
+                  )
+                else
+                  SvgPicture.asset(
+                    'assets/icons/fire.svg',
+                    width: 20,
+                    height: 20,
+                    colorFilter: const ColorFilter.mode(
+                      foregroundColor,
+                      BlendMode.srcIn,
+                    ),
+                  ),
               ],
             ),
           ),

@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:share_handler/share_handler.dart';
 
-/// Service to handle shared content from other apps (YouTube, TikTok, etc.)
 class ShareHandlerService {
   ShareHandlerService() : _handler = ShareHandlerPlatform.instance;
 
@@ -51,7 +50,6 @@ class ShareHandlerService {
     return null;
   }
 
-  /// Extract image path from shared media
   static String? extractImagePath(SharedMedia media) {
     if (media.attachments != null) {
       for (final attachment in media.attachments!) {
